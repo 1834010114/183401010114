@@ -1,0 +1,109 @@
+#include<iostream>
+#include<string>
+#include<vector>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+struct arcNODE
+{
+struct arcNODE* link;
+struct vNODE* vlink;
+double distant;
+double price;
+};
+struct vNODE
+{
+char name[100];
+struct arcNODE* root;
+};
+struct plan
+{
+int v[100];
+double sump;
+double sumd;
+int deep;
+};
+bool cmp(plan& a, plan& b) {
+if (a.sumd == b.sumd)
+return a.sump < b.sump;
+return a.sumd < b.sumd;
+}
+bool* visit;
+struct vNODE* findv(struct vNODE* G, int len, char *d)
+{
+for (int i = 0; i < len; ++i)
+{
+if (strcmp(G[i].name , d)==0)
+return G + i;
+}
+}
+vector<plan> plans;
+void print(vNODE* G, int* v, int deep, double sump = 0, double sumd = 0) {
+plan p;
+p.deep = deep;
+for (int i = 0; i <= deep; ++i) {
+p.v[i] = v[i];
+}
+p.sumd = sumd;
+p.sump = sump;
+plans.push_back(p);
+
+}
+void dfs(vNODE* G, int vn, char* from, char* to, int* v, int deep, double sump = 0, double sumd = 0) {
+v[deep] = findv(G, vn, from) - G;
+if (strcmp(from, to) == 0) {
+print(G, v, deep, sump, sumd);
+return;
+}
+arcNODE* p = findv(G, vn, from)->root;
+while (p) {
+bool fg = true;
+for (int i = 0; i <= deep; ++i) {
+if (v[i] == p->vlink - G)
+{
+fg = false;
+break;
+}
+
+}
+if (fg) {
+dfs(G, vn, p->vlink->name, to, v, deep + 1, sump + p->price, sumd + p->distant);
+}
+p = p->link;
+}
+}
+int main()
+{
+int vn;
+cin >> vn;
+struct vNODE* G = new struct vNODE[vn];
+visit = new bool[vn];
+for (int i = 0; i < vn; ++i)
+{
+cin >> G[i].name;
+G[i].root = NULL;
+visit[i] = false;
+}
+int arcn;
+cin >> arcn;
+for (int i = 0; i < arcn; ++i)
+{
+char a[100], b[100];
+double d, p;
+cin >> a >> b >> d >> p;
+struct vNODE* ap = findv(G, vn, a), * bp = findv(G, vn, b);
+ap->root = new struct arcNODE({ ap->root,bp ,d,p });
+}
+char from[100], to[100];
+cin >> from >> to;
+int v[1000];
+dfs(G, vn, from, to, v, 0);
+sort(plans.begin(), plans.end(), cmp);
+for (int i = 0; i < plans.size(); ++i) {
+cout << "价格：" << plans[i].sump << " 距离：" << plans[i].sumd << endl<<"路径：";
+for (int ii = 0; ii <= plans[i].deep; ++ii) {
+cout << G[plans[i].v[ii]].name << " ";
+}
+cout << endl;
+}
+return 0;
